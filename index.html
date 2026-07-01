@@ -1,127 +1,517 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rifa Digital Profesional</title>
-    <style>
-        body { margin: 0; padding: 20px; background: #0a1912; display: flex; justify-content: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-        #rifa-root {
-            --bg: #0F2E22; --bg-panel: #14392A; --gold: #D4A72C; --gold-soft: #E8C766; 
-            --cream: #F3ECD9; --cream-dim: #C9C2AC; --amber: #D99A34; --green-sold: #2E7D53;
-            --line: rgba(243,236,217,0.18);
-            background: var(--bg); color: var(--cream); border-radius: 14px;
-            width: 100%; max-width: 500px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden;
-        }
-        .header { padding: 25px; border-bottom: 1px solid var(--line); text-align: center; }
-        .title { font-size: 28px; color: var(--gold-soft); margin: 0; }
-        .stats { display: flex; border-bottom: 1px solid var(--line); }
-        .stat { flex: 1; padding: 15px; text-align: center; border-right: 1px solid var(--line); }
-        .stat:last-child { border-right: none; }
-        .stat-num { font-size: 18px; font-weight: bold; }
-        .board { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; padding: 20px; }
-        .num { aspect-ratio: 1; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 4px; font-size: 12px; }
-        .num.apartado { background: var(--amber); }
-        .num.vendido { background: var(--green-sold); }
-        .btn { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; }
-        .btn-primary { background: var(--gold); color: #000; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; }
-        .modal-content { background: var(--bg-panel); padding: 20px; border-radius: 10px; width: 90%; max-width: 300px; }
-        input { width: 100%; padding: 8px; margin: 10px 0; border-radius: 4px; border: 1px solid var(--line); background: var(--bg); color: #fff; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gran Rifa Digital</title>
+<style>
+  body {
+    margin: 0;
+    padding: 20px;
+    background: #0a1912;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+  }
+  #rifa-root {
+    --bg: #0F2E22;
+    --bg-panel: #14392A;
+    --bg-panel-2: #1A4432;
+    --gold: #D4A72C;
+    --gold-soft: #E8C766;
+    --cream: #F3ECD9;
+    --cream-dim: #C9C2AC;
+    --red-stamp: #9B3030;
+    --amber: #D99A34;
+    --amber-dim: #7A5A24;
+    --green-sold: #2E7D53;
+    --line: rgba(243,236,217,0.18);
+    --font-display: Georgia, 'Times New Roman', serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--cream);
+    font-family: var(--font-body);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    position: relative;
+    width: 100%;
+    max-width: 650px;
+  }
+  #rifa-root * { box-sizing: border-box; }
+  #rifa-root .noselect { user-select: none; }
+
+  /* Header */
+  .rifa-header {
+    padding: 28px 28px 20px;
+    background: linear-gradient(180deg, var(--bg-panel-2), var(--bg-panel));
+    border-bottom: 1px solid var(--line);
+    position: relative;
+  }
+  .rifa-eyebrow {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold-soft);
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .rifa-title {
+    font-family: var(--font-display);
+    font-size: 34px;
+    font-weight: 700;
+    color: var(--cream);
+    line-height: 1.1;
+    margin: 0 0 10px 0;
+  }
+  .rifa-meta-row { display: flex; flex-wrap: wrap; gap: 22px; margin-top: 14px; }
+  .rifa-meta-item { min-width: 120px; }
+  .rifa-meta-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--cream-dim); margin-bottom: 3px; }
+  .rifa-meta-value { font-family: var(--font-display); font-size: 20px; color: var(--gold-soft); }
+
+  /* Perforation divider */
+  .rifa-perf {
+    height: 18px;
+    background: radial-gradient(circle at 9px 9px, var(--bg) 5px, transparent 5.5px);
+    background-size: 24px 18px;
+    background-position: -4px 0;
+  }
+
+  /* Stats bar */
+  .rifa-stats { display: flex; gap: 0; border-bottom: 1px solid var(--line); }
+  .rifa-stat { flex: 1; padding: 14px 18px; text-align: center; border-right: 1px solid var(--line); }
+  .rifa-stat:last-child { border-right: none; }
+  .rifa-stat-num { font-family: var(--font-display); font-size: 24px; font-weight: 700; }
+  .rifa-stat-label { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--cream-dim); margin-top: 2px; }
+  .rifa-stat.disponible .rifa-stat-num { color: var(--cream); }
+  .rifa-stat.apartado .rifa-stat-num { color: var(--amber); }
+  .rifa-stat.vendido .rifa-stat-num { color: #6FD19B; }
+  .rifa-stat.recaudo .rifa-stat-num { color: var(--gold-soft); }
+
+  /* Board */
+  .rifa-board-wrap { padding: 22px 28px 8px; }
+  .rifa-board { display: grid; grid-template-columns: repeat(10, 1fr); gap: 7px; }
+  .rifa-num {
+    aspect-ratio: 1; border-radius: 6px; border: 1.5px solid var(--line);
+    background: rgba(243,236,217,0.03); color: var(--cream);
+    font-family: var(--font-display); font-size: 15px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: transform 0.12s ease, border-color 0.12s ease; position: relative;
+  }
+  .rifa-num:hover { transform: translateY(-2px); border-color: var(--gold-soft); }
+  .rifa-num.apartado { background: var(--amber-dim); border-color: var(--amber); color: var(--gold-soft); }
+  .rifa-num.vendido { background: var(--green-sold); border-color: #6FD19B; color: #EFFFF4; }
+  .rifa-num.vendido::after { content: '✓'; position: absolute; top: 1px; right: 3px; font-size: 9px; }
+  .rifa-num.ganador { animation: rifa-pulse 1s ease-in-out infinite; border-color: var(--gold-soft); box-shadow: 0 0 0 3px rgba(212,167,44,0.5); }
+  
+  @keyframes rifa-pulse {
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+
+  .rifa-legend { display: flex; gap: 18px; padding: 14px 28px 24px; font-size: 11px; color: var(--cream-dim); flex-wrap: wrap; }
+  .rifa-legend-item { display: flex; align-items: center; gap: 6px; }
+  .rifa-legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+  /* Footer / admin toggle */
+  .rifa-footer { border-top: 1px solid var(--line); padding: 14px 28px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .rifa-btn {
+    font-family: var(--font-body); font-size: 13px; font-weight: 600; padding: 9px 16px;
+    border-radius: 7px; border: 1px solid var(--gold); background: transparent; color: var(--gold-soft); cursor: pointer; transition: background 0.15s ease;
+  }
+  .rifa-btn:hover { background: rgba(212,167,44,0.12); }
+  .rifa-btn.primary { background: var(--gold); color: #1A2A1F; }
+  .rifa-btn.primary:hover { background: var(--gold-soft); }
+  .rifa-btn.danger { border-color: var(--red-stamp); color: #E39191; }
+  .rifa-btn.danger:hover { background: rgba(155,48,48,0.15); }
+  .rifa-btn.ghost { border-color: var(--line); color: var(--cream-dim); }
+  .rifa-btn.whatsapp { background: #25D366; border-color: #25D366; color: white; width: 100%; margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 8px;}
+  .rifa-btn.whatsapp:hover { background: #128C7E; border-color: #128C7E;}
+
+  .rifa-admin-tag { font-size: 11px; color: #6FD19B; letter-spacing: 1px; text-transform: uppercase; font-weight: 600; }
+
+  /* Admin panel */
+  .rifa-admin-panel { border-top: 1px solid var(--line); padding: 20px 28px 26px; background: rgba(0,0,0,0.15); }
+  .rifa-admin-panel h3 { font-family: var(--font-display); font-size: 16px; color: var(--gold-soft); margin: 0 0 12px; }
+  .rifa-draw-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+  .rifa-input { background: var(--bg); border: 1px solid var(--line); color: var(--cream); border-radius: 6px; padding: 9px 12px; font-size: 14px; font-family: var(--font-body); }
+  .rifa-input:focus { outline: 1.5px solid var(--gold-soft); }
+  
+  .rifa-buyer-list { max-height: 220px; overflow-y: auto; margin-top: 10px; }
+  .rifa-buyer-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .rifa-buyer-row .n { color: var(--gold-soft); font-family: var(--font-display); width: 30px; }
+  .rifa-buyer-row .st { font-size: 11px; text-transform: uppercase; }
+  .rifa-buyer-row .st.apartado { color: var(--amber); }
+  .rifa-buyer-row .st.vendido { color: #6FD19B; }
+
+  /* Modal */
+  .rifa-overlay { position: absolute; inset: 0; background: rgba(6,15,10,0.72); display: none; align-items: center; justify-content: center; z-index: 40; padding: 20px; }
+  .rifa-overlay.show { display: flex; }
+  .rifa-modal { background: var(--bg-panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 24px; width: 100%; max-width: 340px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); position: relative;}
+  .rifa-modal h3 { font-family: var(--font-display); color: var(--gold-soft); margin: 0 0 4px; font-size: 20px; }
+  .rifa-modal .sub { font-size: 12px; color: var(--cream-dim); margin-bottom: 16px; }
+  .rifa-modal label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--cream-dim); margin: 12px 0 5px; }
+  .rifa-modal input { width: 100%; background: var(--bg); border: 1px solid var(--line); color: var(--cream); border-radius: 6px; padding: 10px 12px; font-size: 14px; font-family: var(--font-body); }
+  .rifa-modal input:focus { outline: 1.5px solid var(--gold-soft); }
+  .rifa-modal-actions { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
+  .rifa-modal-info { font-size: 13px; line-height: 1.6; margin-bottom: 15px; }
+  .rifa-modal-info b { color: var(--gold-soft); }
+  .rifa-modal-close { position: absolute; top: 14px; right: 16px; background: none; border: none; color: var(--cream-dim); font-size: 18px; cursor: pointer; }
+  
+  .rifa-loading { padding: 40px; text-align: center; color: var(--gold-soft); font-size: 14px; font-weight: bold; }
+
+  @media (max-width: 480px) {
+    .rifa-header, .rifa-board-wrap, .rifa-footer, .rifa-admin-panel, .rifa-legend { padding-left: 16px; padding-right: 16px; }
+    .rifa-title { font-size: 26px; }
+    .rifa-board { gap: 5px; }
+    .rifa-num { font-size: 12px; }
+  }
+</style>
 </head>
 <body>
 
 <div id="rifa-root">
-    <div class="header">
-        <h1 class="title" id="titulo">Cargando...</h1>
-    </div>
-    <div class="stats">
-        <div class="stat"> <div class="stat-num" id="stat-disp">0</div>Libres </div>
-        <div class="stat"> <div class="stat-num" id="stat-vend">0</div>Vendidos </div>
-    </div>
-    <div class="board" id="board"></div>
-    <div style="padding: 20px; text-align: center;">
-        <button class="btn btn-primary" id="btn-admin">Administrar</button>
-    </div>
-    
-    <div id="admin-panel" style="display:none; padding:20px; border-top:1px solid var(--line);">
-        <input type="text" id="num-ganador" placeholder="Número ganador">
-        <button class="btn" id="btn-sortear">Registrar Ganador</button>
-        <button class="btn" id="btn-reset" style="background:#800;">Reiniciar</button>
-    </div>
-</div>
+  <div id="rifa-loading" class="rifa-loading">Conectando tablero en tiempo real...</div>
+  <div id="rifa-content" style="display:none;">
 
-<div class="modal" id="modal">
-    <div class="modal-content" id="modal-body"></div>
+    <div class="rifa-header">
+      <div class="rifa-eyebrow">Rifa digital</div>
+      <h1 class="rifa-title" id="rifa-titulo">Gran Rifa</h1>
+      <div class="rifa-meta-row">
+        <div class="rifa-meta-item">
+          <div class="rifa-meta-label">Premio</div>
+          <div class="rifa-meta-value" id="rifa-premio">Por definir</div>
+        </div>
+        <div class="rifa-meta-item">
+          <div class="rifa-meta-label">Precio por número</div>
+          <div class="rifa-meta-value" id="rifa-precio">$10.000</div>
+        </div>
+        <div class="rifa-meta-item">
+          <div class="rifa-meta-label">Fecha del sorteo</div>
+          <div class="rifa-meta-value" id="rifa-fecha">Por definir</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rifa-perf"></div>
+
+    <div class="rifa-stats">
+      <div class="rifa-stat disponible"><div class="rifa-stat-num" id="stat-disp">100</div><div class="rifa-stat-label">Disponibles</div></div>
+      <div class="rifa-stat apartado"><div class="rifa-stat-num" id="stat-apar">0</div><div class="rifa-stat-label">Apartados</div></div>
+      <div class="rifa-stat vendido"><div class="rifa-stat-num" id="stat-vend">0</div><div class="rifa-stat-label">Vendidos</div></div>
+      <div class="rifa-stat recaudo"><div class="rifa-stat-num" id="stat-recaudo">$0</div><div class="rifa-stat-label">Recaudado</div></div>
+    </div>
+
+    <div class="rifa-board-wrap">
+      <div class="rifa-board" id="rifa-board"></div>
+    </div>
+
+    <div class="rifa-legend">
+      <div class="rifa-legend-item"><div class="rifa-legend-dot" style="background:rgba(243,236,217,0.08); border:1px solid var(--line);"></div>Disponible</div>
+      <div class="rifa-legend-item"><div class="rifa-legend-dot" style="background:var(--amber-dim); border:1px solid var(--amber);"></div>Apartado</div>
+      <div class="rifa-legend-item"><div class="rifa-legend-dot" style="background:var(--green-sold);"></div>Vendido</div>
+    </div>
+
+    <div class="rifa-footer">
+      <span id="rifa-admin-tag" class="rifa-admin-tag" style="display:none;">● Modo administrador activo</span>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-left: auto;">
+        <button class="rifa-btn ghost" id="btn-editar-info" style="display:none;">Editar información</button>
+        <button class="rifa-btn" id="btn-admin-toggle">Modo administrador</button>
+      </div>
+    </div>
+
+    <div class="rifa-admin-panel" id="rifa-admin-panel" style="display:none;">
+      <h3>Sorteo verificado</h3>
+      <div class="rifa-draw-row">
+        <div>
+          <label style="font-size:11px;text-transform:uppercase;color:var(--cream-dim);display:block;margin-bottom:5px;">Últimas 2 cifras</label>
+          <input type="text" maxlength="2" class="rifa-input" id="input-numero-ganador" placeholder="Ej: 47" style="width:90px;">
+        </div>
+        <div>
+          <label style="font-size:11px;text-transform:uppercase;color:var(--cream-dim);display:block;margin-bottom:5px;">Fuente (lotería)</label>
+          <input type="text" class="rifa-input" id="input-fuente-loteria" placeholder="Ej: Lotería de Medellín" style="width:220px;">
+        </div>
+        <button class="rifa-btn primary" id="btn-sortear" style="align-self:flex-end;">Realizar sorteo</button>
+      </div>
+
+      <h3 style="margin-top:22px;">Compradores registrados</h3>
+      <div class="rifa-buyer-list" id="rifa-buyer-list"></div>
+
+      <div style="margin-top:20px; padding-top: 15px; border-top: 1px solid var(--line);">
+        <button class="rifa-btn ghost" id="btn-reset-rifa">Reiniciar rifa (borra todo)</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Overlay / modal -->
+  <div class="rifa-overlay" id="rifa-overlay">
+    <div class="rifa-modal" id="rifa-modal">
+      <button class="rifa-modal-close" id="rifa-modal-close">✕</button>
+      <div id="rifa-modal-body"></div>
+    </div>
+  </div>
 </div>
 
 <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.4/+esm';
+  // Importar Supabase vía CDN
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.4/+esm';
 
-    // --- CONFIGURACIÓN ---
-    const supabaseUrl = 'https://gkbostzepzelzrgzsgrs.supabase.co'; 
-    const supabaseKey = 'sb_publishable_hWt_cG8ic8kDMrAoHzV8AQ_JzZLSyOT';
-    const supabase = createClient(supabaseUrl, supabaseKey);
-    const NUM_WPP = "573217227461";
+  // CREDENCIALES DE SUPABASE CORREGIDAS
+  const supabaseUrl = 'https://gkbostzepzelzrgzsgrs.supabase.co'; 
+  const supabaseKey = 'sb_publishable_hWt_cG8ic8kDMrAoHzV8AQ_JzZLSyOT';
+  const supabase = createClient(supabaseUrl, supabaseKey);
 
-    let board = {};
-    const $ = (id) => document.getElementById(id);
+  const TOTAL = 100;
+  const NUMERO_WHATSAPP = "573217227461"; 
+  const ADMIN_PIN_KEY = 'rifa:admin_pin';
 
-    async function init() {
-        const { data } = await supabase.from('rifas').select('*').eq('id', 'sorteo_principal').single();
-        if (data) {
-            board = data.board;
-            $('titulo').textContent = data.config.titulo;
-            render();
-        }
-        supabase.channel('public:rifas').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rifas' }, p => { board = p.new.board; render(); }).subscribe();
+  let board = {};
+  let config = { titulo: 'Gran Rifa', premio: 'Por definir', precio: 10000, fecha: 'Por definir' };
+  let currentDraw = null;
+  let isAdmin = false;
+
+  const $ = (id) => document.getElementById(id);
+  function fmtMoney(n){ return '$' + Number(n||0).toLocaleString('es-CO'); }
+  function pad(n){ return String(n).padStart(2,'0'); }
+
+  // 1. Carga inicial de datos
+  async function loadData() {
+    const { data, error } = await supabase
+      .from('rifas')
+      .select('*')
+      .eq('id', 'sorteo_principal')
+      .single();
+
+    if (data) {
+      board = data.board || {};
+      config = data.config || config;
+      currentDraw = data.draw || null;
     }
-
-    function render() {
-        $('board').innerHTML = '';
-        let disp = 0, vend = 0;
-        for(let i=0; i<100; i++) {
-            let n = String(i).padStart(2, '0');
-            let s = board[n]?.status || 'disponible';
-            if(s === 'disponible') disp++; if(s === 'vendido') vend++;
-            let div = document.createElement('div');
-            div.className = `num ${s}`; div.textContent = n;
-            div.onclick = () => openModal(n);
-            $('board').appendChild(div);
-        }
-        $('stat-disp').textContent = disp; $('stat-vend').textContent = vend;
+    
+    if (Object.keys(board).length === 0) {
+      for (let i=0;i<TOTAL;i++) board[pad(i)] = { status: 'disponible' };
+      await syncData({ board });
     }
+    
+    renderAll();
+    $('rifa-loading').style.display = 'none';
+    $('rifa-content').style.display = 'block';
+  }
 
-    function openModal(n) {
-        let b = board[n] || { status: 'disponible' };
-        $('modal-body').innerHTML = `<h3>Número ${n}</h3>
-            <input type="text" id="name" placeholder="Nombre">
-            <input type="text" id="tel" placeholder="Teléfono">
-            <button class="btn btn-primary" id="btn-save">Apartar</button>
-            <button class="btn" onclick="$('modal').style.display='none'">Cerrar</button>`;
-        $('modal').style.display = 'flex';
-        $('btn-save').onclick = async () => {
-            board[n] = { status: 'apartado', buyerName: $('name').value, buyerPhone: $('tel').value };
-            await supabase.from('rifas').update({ board }).eq('id', 'sorteo_principal');
-            window.open(`https://wa.me/${NUM_WPP}?text=Quiero el número ${n}. Soy ${$('name').value}`);
-            $('modal').style.display = 'none';
-        };
+  // 2. Función genérica para guardar cambios en Supabase
+  async function syncData(updates) {
+    const { error } = await supabase
+      .from('rifas')
+      .update(updates)
+      .eq('id', 'sorteo_principal');
+      
+    if (error) console.error("Error sincronizando:", error);
+  }
+
+  // 3. Listener en Tiempo Real (Suscripción a Postgres)
+  supabase
+    .channel('public:rifas')
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rifas' }, payload => {
+      const newData = payload.new;
+      board = newData.board || board;
+      config = newData.config || config;
+      currentDraw = newData.draw || currentDraw;
+      renderAll();
+    })
+    .subscribe();
+
+  // --- Funciones de Interfaz ---
+
+  function renderConfig(){
+    $('rifa-titulo').textContent = config.titulo;
+    $('rifa-premio').textContent = config.premio;
+    $('rifa-precio').textContent = fmtMoney(config.precio);
+    $('rifa-fecha').textContent = config.fecha;
+  }
+
+  function renderStats(){
+    let disp=0, apar=0, vend=0;
+    Object.values(board).forEach(e=>{
+      if (e.status==='disponible') disp++;
+      else if (e.status==='apartado') apar++;
+      else if (e.status==='vendido') vend++;
+    });
+    $('stat-disp').textContent = disp;
+    $('stat-apar').textContent = apar;
+    $('stat-vend').textContent = vend;
+    $('stat-recaudo').textContent = fmtMoney(vend * (config.precio||0));
+  }
+
+  function renderBoard(){
+    const el = $('rifa-board');
+    el.innerHTML = '';
+    for (let i=0;i<TOTAL;i++){
+      const num = pad(i);
+      const entry = board[num] || { status: 'disponible' };
+      const btn = document.createElement('div');
+      btn.className = 'rifa-num noselect ' + entry.status;
+      if (currentDraw && currentDraw.numero === num && currentDraw.resultado === 'gano') {
+        btn.classList.add('ganador');
+      }
+      btn.textContent = num;
+      btn.addEventListener('click', () => openNumberModal(num));
+      el.appendChild(btn);
     }
+  }
 
-    $('btn-admin').onclick = () => {
-        let pin = prompt("PIN Admin");
-        if(pin === "1234") $('admin-panel').style.display = 'block';
+  function renderBuyerList(){
+    const list = $('rifa-buyer-list');
+    const entries = Object.entries(board).filter(([n,e]) => e.status !== 'disponible');
+    if (entries.length === 0){
+      list.innerHTML = '<div style="font-size:12px;color:var(--cream-dim);">Aún no hay números.</div>'; return;
+    }
+    list.innerHTML = entries.sort((a,b)=>a[0].localeCompare(b[0])).map(([n,e]) => `
+      <div class="rifa-buyer-row">
+        <span class="n">${n}</span>
+        <span>${(e.buyerName||'—')} ${e.buyerPhone? '· '+e.buyerPhone : ''}</span>
+        <span class="st ${e.status}">${e.status}</span>
+      </div>
+    `).join('');
+  }
+
+  function renderAll(){
+    renderConfig(); renderStats(); renderBoard();
+    if (isAdmin) renderBuyerList();
+  }
+
+  function closeModal(){ $('rifa-overlay').classList.remove('show'); $('rifa-modal-body').innerHTML = ''; }
+
+  function openNumberModal(num){
+    const entry = board[num] || { status: 'disponible' };
+    const body = $('rifa-modal-body');
+
+    if (entry.status === 'disponible'){
+      body.innerHTML = `
+        <h3>Número ${num}</h3>
+        <div class="sub">Disponible · ${fmtMoney(config.precio)}</div>
+        <label>Nombre completo</label><input type="text" id="f-name" placeholder="Tu nombre">
+        <label>Teléfono / WhatsApp</label><input type="text" id="f-phone" placeholder="Tu teléfono">
+        <button class="rifa-btn whatsapp" id="f-apartar">📲 Apartar por WhatsApp</button>
+        <div class="rifa-modal-actions"><button class="rifa-btn ghost" id="f-cancel" style="width:100%">Cancelar</button></div>
+      `;
+      $('f-cancel').onclick = closeModal;
+      $('f-apartar').onclick = async () => {
+        const name = $('f-name').value.trim(); const phone = $('f-phone').value.trim();
+        if (!name || !phone) return alert('Completa nombre y teléfono.');
+        
+        board[num] = { status: 'apartado', buyerName: name, buyerPhone: phone };
+        await syncData({ board }); 
+        closeModal();
+        
+        const msg = `Hola, quiero apartar el número *${num}* para la ${config.titulo}. Mi nombre es ${name}.`;
+        window.open(`https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(msg)}`, '_blank');
+      };
+    } else {
+      let actions = '';
+      if (isAdmin){
+        if (entry.status === 'apartado') actions = `<button class="rifa-btn primary" id="f-confirmar">Confirmar pago</button> <button class="rifa-btn danger" id="f-liberar">Liberar</button>`;
+        else actions = `<button class="rifa-btn danger" id="f-liberar">Liberar</button>`;
+      }
+      body.innerHTML = `
+        <h3>Número ${num}</h3>
+        <div class="sub">${entry.status.toUpperCase()}</div>
+        <div class="rifa-modal-info">
+            <div><b>Comprador:</b> ${entry.buyerName || '—'}</div>
+            <div><b>Teléfono:</b> ${entry.buyerPhone || '—'}</div>
+        </div>
+        <div class="rifa-modal-actions">${actions}<button class="rifa-btn ghost" id="f-cancel">Cerrar</button></div>
+      `;
+      $('f-cancel').onclick = closeModal;
+      if (isAdmin){
+        if($('f-confirmar')) $('f-confirmar').onclick = async () => { board[num].status = 'vendido'; await syncData({ board }); closeModal(); };
+        if($('f-liberar')) $('f-liberar').onclick = async () => { if(confirm('¿Liberar número?')) { board[num] = { status: 'disponible' }; await syncData({ board }); closeModal(); } };
+      }
+    }
+    $('rifa-overlay').classList.add('show');
+  }
+
+  $('btn-admin-toggle').addEventListener('click', () => {
+    if (isAdmin){ 
+        isAdmin = false; 
+        $('rifa-admin-panel').style.display = 'none'; 
+        $('rifa-admin-tag').style.display = 'none'; 
+        $('btn-editar-info').style.display = 'none'; 
+        $('btn-admin-toggle').textContent = 'Modo administrador'; 
+        return; 
+    }
+    let pin = localStorage.getItem(ADMIN_PIN_KEY);
+    if (!pin) { 
+        pin = prompt('Crea un PIN local de administrador:'); 
+        if(pin) localStorage.setItem(ADMIN_PIN_KEY, pin); else return; 
+    }
+    if (prompt('Ingresa tu PIN:') === pin){ 
+        isAdmin = true; 
+        $('rifa-admin-panel').style.display = 'block'; 
+        $('rifa-admin-tag').style.display = 'inline'; 
+        $('btn-editar-info').style.display = 'block'; 
+        $('btn-admin-toggle').textContent = 'Salir de modo administrador'; 
+        renderBuyerList(); 
+    } else { alert('PIN incorrecto.'); }
+  });
+
+  $('btn-editar-info').addEventListener('click', () => {
+    $('rifa-modal-body').innerHTML = `
+      <h3>Editar información</h3>
+      <label>Título</label><input type="text" id="e-titulo" value="${config.titulo}">
+      <label>Premio</label><input type="text" id="e-premio" value="${config.premio}">
+      <label>Precio (COP)</label><input type="number" id="e-precio" value="${config.precio}">
+      <label>Fecha del sorteo</label><input type="text" id="e-fecha" value="${config.fecha}">
+      <div class="rifa-modal-actions">
+        <button class="rifa-btn primary" id="e-guardar">Guardar</button>
+        <button class="rifa-btn ghost" id="f-cancel">Cancelar</button>
+      </div>
+    `;
+    $('f-cancel').onclick = closeModal;
+    $('e-guardar').onclick = async () => {
+      config.titulo = $('e-titulo').value.trim() || config.titulo; 
+      config.premio = $('e-premio').value.trim() || config.premio;
+      config.precio = Number($('e-precio').value) || config.precio; 
+      config.fecha = $('e-fecha').value.trim() || config.fecha;
+      await syncData({ config }); 
+      closeModal();
     };
+  });
 
-    $('btn-reset').onclick = async () => {
-        if(confirm("¿Borrar todo?")) {
-            for(let i=0; i<100; i++) board[String(i).padStart(2,'0')] = { status: 'disponible' };
-            await supabase.from('rifas').update({ board }).eq('id', 'sorteo_principal');
-        }
-    };
+  $('btn-sortear').addEventListener('click', async () => {
+    const numRaw = $('input-numero-ganador').value.trim();
+    if (!/^\d{1,2}$/.test(numRaw)){ alert('Ingresa un número válido de 0 a 99.'); return; }
+    
+    const num = pad(Number(numRaw));
+    const fuente = $('input-fuente-loteria').value.trim() || 'Lotería';
+    const entry = board[num] || { status: 'disponible' };
+    
+    let resultado = entry.status === 'vendido' ? 'gano' : (entry.status === 'apartado' ? 'sin_confirmar' : 'sin_vender');
+    currentDraw = { numero: num, fuente, resultado };
+    
+    await syncData({ draw: currentDraw });
+    
+    if (resultado === 'gano') {
+        alert(`¡Felicidades! El número ${num} es el ganador. Comprador: ${entry.buyerName}`);
+    } else {
+        alert(`El número ${num} salió sorteado, pero no estaba vendido.`);
+    }
+  });
 
-    init();
+  $('btn-reset-rifa').addEventListener('click', async () => {
+    if (!confirm('¿Borrar TODOS los registros del tablero? Esta acción no se puede deshacer.')) return;
+    board = {}; 
+    for (let i=0;i<TOTAL;i++) board[pad(i)] = { status: 'disponible' };
+    currentDraw = null;
+    await syncData({ board, draw: null });
+  });
+
+  $('rifa-modal-close').addEventListener('click', closeModal);
+  $('rifa-overlay').addEventListener('click', (e) => { if (e.target.id === 'rifa-overlay') closeModal(); });
+
+  // Iniciar la app
+  loadData();
 </script>
 </body>
 </html>
