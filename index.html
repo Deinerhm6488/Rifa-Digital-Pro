@@ -1,0 +1,222 @@
+<script type="module">
+  // Importar Supabase vía CDN
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.4/+esm';
+
+  // PEGA AQUÍ TUS CREDENCIALES DE SUPABASE
+  const supabaseUrl = 'https://gkbostzepzelzrgzsgrs.supabase.co/rest/v1/'; 
+  const supabaseKey = 'sb_publishable_hWt_cG8ic8kDMrAoHzV8AQ_JzZLSyOT';
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
+  const TOTAL = 100;
+  const NUMERO_WHATSAPP = "573217227461"; // Tu número aquí
+  const ADMIN_PIN_KEY = 'rifa:admin_pin';
+
+  let board = {};
+  let config = { titulo: 'Gran Rifa', premio: 'Por definir', precio: 10000, fecha: 'Por definir' };
+  let currentDraw = null;
+  let isAdmin = false;
+
+  const $ = (id) => document.getElementById(id);
+  function fmtMoney(n){ return '$' + Number(n||0).toLocaleString('es-CO'); }
+  function pad(n){ return String(n).padStart(2,'0'); }
+
+  // 1. Carga inicial de datos
+  async function loadData() {
+    const { data, error } = await supabase
+      .from('rifas')
+      .select('*')
+      .eq('id', 'sorteo_principal')
+      .single();
+
+    if (data) {
+      board = data.board || {};
+      config = data.config || config;
+      currentDraw = data.draw || null;
+    }
+    
+    if (Object.keys(board).length === 0) {
+      for (let i=0;i<TOTAL;i++) board[pad(i)] = { status: 'disponible' };
+      await syncData({ board });
+    }
+    
+    renderAll();
+    $('rifa-loading').style.display = 'none';
+    $('rifa-content').style.display = 'block';
+  }
+
+  // 2. Función genérica para guardar cambios en Supabase
+  async function syncData(updates) {
+    const { error } = await supabase
+      .from('rifas')
+      .update(updates)
+      .eq('id', 'sorteo_principal');
+      
+    if (error) console.error("Error sincronizando:", error);
+  }
+
+  // 3. Listener en Tiempo Real (Suscripción a Postgres)
+  supabase
+    .channel('public:rifas')
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rifas' }, payload => {
+      const newData = payload.new;
+      board = newData.board || board;
+      config = newData.config || config;
+      currentDraw = newData.draw || currentDraw;
+      renderAll();
+    })
+    .subscribe();
+
+  // --- Funciones de Interfaz (Sin cambios mayores) ---
+
+  function renderConfig(){
+    $('rifa-titulo').textContent = config.titulo;
+    $('rifa-premio').textContent = config.premio;
+    $('rifa-precio').textContent = fmtMoney(config.precio);
+    $('rifa-fecha').textContent = config.fecha;
+  }
+
+  function renderStats(){
+    let disp=0, apar=0, vend=0;
+    Object.values(board).forEach(e=>{
+      if (e.status==='disponible') disp++;
+      else if (e.status==='apartado') apar++;
+      else if (e.status==='vendido') vend++;
+    });
+    $('stat-disp').textContent = disp;
+    $('stat-apar').textContent = apar;
+    $('stat-vend').textContent = vend;
+    $('stat-recaudo').textContent = fmtMoney(vend * (config.precio||0));
+  }
+
+  function renderBoard(){
+    const el = $('rifa-board');
+    el.innerHTML = '';
+    for (let i=0;i<TOTAL;i++){
+      const num = pad(i);
+      const entry = board[num] || { status: 'disponible' };
+      const btn = document.createElement('div');
+      btn.className = 'rifa-num noselect ' + entry.status;
+      if (currentDraw && currentDraw.numero === num && currentDraw.resultado === 'gano') {
+        btn.classList.add('ganador');
+      }
+      btn.textContent = num;
+      btn.addEventListener('click', () => openNumberModal(num));
+      el.appendChild(btn);
+    }
+  }
+
+  function renderBuyerList(){
+    const list = $('rifa-buyer-list');
+    const entries = Object.entries(board).filter(([n,e]) => e.status !== 'disponible');
+    if (entries.length === 0){
+      list.innerHTML = '<div style="font-size:12px;color:var(--cream-dim);">Aún no hay números.</div>'; return;
+    }
+    list.innerHTML = entries.sort((a,b)=>a[0].localeCompare(b[0])).map(([n,e]) => `
+      <div class="rifa-buyer-row">
+        <span class="n">${n}</span>
+        <span>${(e.buyerName||'—')} ${e.buyerPhone? '· '+e.buyerPhone : ''}</span>
+        <span class="st ${e.status}">${e.status}</span>
+      </div>
+    `).join('');
+  }
+
+  function renderAll(){
+    renderConfig(); renderStats(); renderBoard();
+    if (isAdmin) renderBuyerList();
+  }
+
+  function closeModal(){ $('rifa-overlay').classList.remove('show'); $('rifa-modal-body').innerHTML = ''; }
+
+  function openNumberModal(num){
+    const entry = board[num] || { status: 'disponible' };
+    const body = $('rifa-modal-body');
+
+    if (entry.status === 'disponible'){
+      body.innerHTML = `
+        <h3>Número ${num}</h3>
+        <div class="sub">Disponible · ${fmtMoney(config.precio)}</div>
+        <label>Nombre completo</label><input type="text" id="f-name">
+        <label>Teléfono / WhatsApp</label><input type="text" id="f-phone">
+        <div class="rifa-modal-actions"><button class="rifa-btn primary" id="f-apartar">Apartar número</button><button class="rifa-btn ghost" id="f-cancel">Cancelar</button></div>
+      `;
+      $('f-cancel').onclick = closeModal;
+      $('f-apartar').onclick = async () => {
+        const name = $('f-name').value.trim(); const phone = $('f-phone').value.trim();
+        if (!name || !phone) return alert('Completa nombre y teléfono.');
+        
+        board[num] = { status: 'apartado', buyerName: name, buyerPhone: phone };
+        await syncData({ board }); // Guarda en BD
+        closeModal();
+        
+        const msg = `Hola, quiero apartar el número *${num}* para la ${config.titulo}. Mi nombre es ${name}.`;
+        window.open(`https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(msg)}`, '_blank');
+      };
+    } else {
+      let actions = '';
+      if (isAdmin){
+        if (entry.status === 'apartado') actions = `<button class="rifa-btn primary" id="f-confirmar">Confirmar pago</button> <button class="rifa-btn danger" id="f-liberar">Liberar</button>`;
+        else actions = `<button class="rifa-btn danger" id="f-liberar">Liberar</button>`;
+      }
+      body.innerHTML = `
+        <h3>Número ${num}</h3>
+        <div class="sub">${entry.status.toUpperCase()}</div>
+        <div class="rifa-modal-info"><div><b>Comprador:</b> ${entry.buyerName || '—'}</div><div><b>Teléfono:</b> ${entry.buyerPhone || '—'}</div></div>
+        <div class="rifa-modal-actions">${actions}<button class="rifa-btn ghost" id="f-cancel">Cerrar</button></div>
+      `;
+      $('f-cancel').onclick = closeModal;
+      if (isAdmin){
+        if($('f-confirmar')) $('f-confirmar').onclick = async () => { board[num].status = 'vendido'; await syncData({ board }); closeModal(); };
+        if($('f-liberar')) $('f-liberar').onclick = async () => { if(confirm('¿Liberar número?')) { board[num] = { status: 'disponible' }; await syncData({ board }); closeModal(); } };
+      }
+    }
+    $('rifa-overlay').classList.add('show');
+  }
+
+  $('btn-admin-toggle').addEventListener('click', () => {
+    if (isAdmin){ isAdmin = false; $('rifa-admin-panel').style.display = 'none'; $('rifa-admin-tag').style.display = 'none'; $('btn-admin-toggle').textContent = 'Modo administrador'; return; }
+    let pin = localStorage.getItem(ADMIN_PIN_KEY);
+    if (!pin) { pin = prompt('Crea un PIN local de administrador:'); if(pin) localStorage.setItem(ADMIN_PIN_KEY, pin); else return; }
+    if (prompt('PIN:') === pin){ isAdmin = true; $('rifa-admin-panel').style.display = 'block'; $('rifa-admin-tag').style.display = 'inline'; $('btn-admin-toggle').textContent = 'Salir de modo administrador'; renderBuyerList(); } 
+    else { alert('PIN incorrecto.'); }
+  });
+
+  $('btn-editar-info').addEventListener('click', () => {
+    $('rifa-modal-body').innerHTML = `
+      <h3>Editar información</h3>
+      <label>Título</label><input type="text" id="e-titulo" value="${config.titulo}">
+      <label>Premio</label><input type="text" id="e-premio" value="${config.premio}">
+      <label>Precio (COP)</label><input type="number" id="e-precio" value="${config.precio}">
+      <label>Fecha del sorteo</label><input type="text" id="e-fecha" value="${config.fecha}">
+      <div class="rifa-modal-actions"><button class="rifa-btn primary" id="e-guardar">Guardar</button><button class="rifa-btn ghost" id="f-cancel">Cancelar</button></div>
+    `;
+    $('f-cancel').onclick = closeModal;
+    $('e-guardar').onclick = async () => {
+      config.titulo = $('e-titulo').value.trim() || config.titulo; config.premio = $('e-premio').value.trim() || config.premio;
+      config.precio = Number($('e-precio').value) || config.precio; config.fecha = $('e-fecha').value.trim() || config.fecha;
+      await syncData({ config }); closeModal();
+    };
+  });
+
+  $('btn-sortear').addEventListener('click', async () => {
+    const num = pad(Number($('input-numero-ganador').value.trim()));
+    const fuente = $('input-fuente-loteria').value.trim() || 'Lotería';
+    const entry = board[num] || { status: 'disponible' };
+    let resultado = entry.status === 'vendido' ? 'gano' : (entry.status === 'apartado' ? 'sin_confirmar' : 'sin_vender');
+    currentDraw = { numero: num, fuente, resultado };
+    await syncData({ draw: currentDraw });
+  });
+
+  $('btn-reset-rifa').addEventListener('click', async () => {
+    if (!confirm('¿Borrar TODO?')) return;
+    board = {}; for (let i=0;i<TOTAL;i++) board[pad(i)] = { status: 'disponible' };
+    currentDraw = null;
+    await syncData({ board, draw: null });
+  });
+
+  ['rifa-titulo','rifa-premio','rifa-fecha'].forEach(id=> $(id).addEventListener('click', () => { if (isAdmin) $('btn-editar-info').click(); }));
+  $('rifa-modal-close').addEventListener('click', closeModal);
+  $('rifa-overlay').addEventListener('click', (e) => { if (e.target.id === 'rifa-overlay') closeModal(); });
+
+  // Iniciar la app
+  loadData();
+</script>
