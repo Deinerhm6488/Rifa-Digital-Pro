@@ -179,7 +179,6 @@
       <span id="rifa-admin-tag" class="rifa-admin-tag" style="display:none;">● Modo administrador activo</span>
       <div style="display:flex; gap:8px; flex-wrap:wrap; margin-left: auto;">
         <button class="rifa-btn ghost" id="btn-editar-info" style="display:none;">Editar rifa y premio</button>
-        <button class="rifa-btn" id="btn-admin-toggle">Modo administrador</button>
       </div>
     </div>
 
@@ -407,16 +406,35 @@
     $('rifa-overlay').classList.add('show');
   }
 
-  $('btn-admin-toggle').addEventListener('click', () => {
-    if (isAdmin){ 
-        isAdmin = false; $('rifa-admin-panel').style.display = 'none'; $('rifa-admin-tag').style.display = 'none'; $('btn-editar-info').style.display = 'none'; $('btn-admin-toggle').textContent = 'Modo administrador'; return; 
-    }
+// Ocultamos el botón de administrador completamente en el HTML
+// En tu HTML, asegúrate de que el botón tenga style="display:none;" 
+// o simplemente quítalo del código HTML.
+
+// Ahora, activamos el panel con un doble clic en el título (rifa-titulo)
+$('rifa-titulo').addEventListener('dblclick', async () => {
+    if (isAdmin) return; // Si ya está activo, no hacer nada
+
     let pin = localStorage.getItem(ADMIN_PIN_KEY);
-    if (!pin) { pin = prompt('Crea un PIN local de administrador:'); if(pin) localStorage.setItem(ADMIN_PIN_KEY, pin); else return; }
-    if (prompt('Ingresa tu PIN:') === pin){ 
-        isAdmin = true; $('rifa-admin-panel').style.display = 'block'; $('rifa-admin-tag').style.display = 'inline'; $('btn-editar-info').style.display = 'block'; $('btn-admin-toggle').textContent = 'Salir de modo administrador'; renderBuyerList(); 
-    } else { alert('PIN incorrecto.'); }
-  });
+    if (!pin) {
+        pin = prompt('Crea un PIN de administrador:');
+        if (pin) localStorage.setItem(ADMIN_PIN_KEY, pin); else return;
+    }
+
+    const inputPin = prompt('Ingresa el PIN de administrador:');
+    if (inputPin === pin) {
+        isAdmin = true;
+        $('rifa-admin-panel').style.display = 'block';
+        $('rifa-admin-tag').style.display = 'inline';
+        $('btn-editar-info').style.display = 'block';
+        renderBuyerList();
+    } else {
+        alert('PIN incorrecto.');
+    }
+});
+
+// Para salir del modo admin, puedes agregar un botón pequeño dentro del panel 
+// que diga "Cerrar Panel" y al hacerle clic ejecute esto:
+// isAdmin = false; $('rifa-admin-panel').style.display = 'none';
 
  $('btn-editar-info').addEventListener('click', () => {
     $('rifa-modal-body').innerHTML = `
