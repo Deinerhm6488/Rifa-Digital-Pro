@@ -263,6 +263,17 @@
   function pad(n){ return String(n).padStart(2,'0'); }
   function seedBoard(){ const b = {}; for (let i=0;i<TOTAL;i++) b[pad(i)] = { status: 'disponible' }; return b; }
 
+  function getInitials(name){
+    if (!name) return '—';
+    return name.trim().split(/\s+/).map(w => w[0].toUpperCase()).join('.') + '.';
+  }
+  function maskPhone(phone){
+    if (!phone) return '—';
+    const digits = phone.replace(/\D/g,'');
+    if (digits.length <= 2) return '**';
+    return '*'.repeat(digits.length - 2) + digits.slice(-2);
+  }
+
   async function loadData() {
     const { data, error } = await supabase.from('rifas').select('*').eq('id', RIFA_ID).single();
     if (data) {
@@ -414,12 +425,14 @@
         if (entry.status === 'apartado') actions = `<button class="rifa-btn primary" id="f-confirmar">Confirmar pago</button> <button class="rifa-btn danger" id="f-liberar">Liberar</button>`;
         else actions = `<button class="rifa-btn danger" id="f-liberar">Liberar</button>`;
       }
+      const nombreMostrado = isAdmin ? (entry.buyerName || '—') : getInitials(entry.buyerName);
+      const telefonoMostrado = isAdmin ? (entry.buyerPhone || '—') : maskPhone(entry.buyerPhone);
       body.innerHTML = `
         <h3>Número ${num}</h3>
         <div class="sub">${entry.status.toUpperCase()}</div>
         <div class="rifa-modal-info">
-            <div><b>Comprador:</b> ${entry.buyerName || '—'}</div>
-            <div><b>Teléfono:</b> ${entry.buyerPhone || '—'}</div>
+            <div><b>Comprador:</b> ${nombreMostrado}</div>
+            <div><b>Teléfono:</b> ${telefonoMostrado}</div>
         </div>
         <div class="rifa-modal-actions">${actions}<button class="rifa-btn ghost" id="f-cancel">Cerrar</button></div>
       `;
