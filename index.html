@@ -216,8 +216,9 @@
 </div>
 
 <script type="module">
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.4/+esm';
-
+ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.4/+esm';
+  const supabase = createClient('https://gkbostzepzelzrgzsgrs.supabase.co', 'sb_publishable_hWt_cG8ic8kDMrAoHzV8AQ_JzZLSyOT');
+  
   const supabaseUrl = 'https://gkbostzepzelzrgzsgrs.supabase.co'; 
   const supabaseKey = 'sb_publishable_hWt_cG8ic8kDMrAoHzV8AQ_JzZLSyOT';
   const supabase = createClient(supabaseUrl, supabaseKey);
@@ -245,15 +246,15 @@
   function fmtMoney(n){ return '$' + Number(n||0).toLocaleString('es-CO'); }
   function pad(n){ return String(n).padStart(2,'0'); }
 
-  async function loadData() {
+async function loadData() {
     const { data, error } = await supabase.from('rifas').select('*').eq('id', 'sorteo_principal').single();
-
     if (data) {
       board = data.board || {};
       config = { ...config, ...(data.config || {}) }; 
       currentDraw = data.draw || null;
     }
     
+    // Si la DB está vacía, inicializamos
     if (Object.keys(board).length === 0) {
       for (let i=0;i<TOTAL;i++) board[pad(i)] = { status: 'disponible' };
       await syncData({ board, config });
@@ -263,9 +264,9 @@
     $('rifa-loading').style.display = 'none';
     $('rifa-content').style.display = 'block';
   }
-
   async function syncData(updates) {
-    await supabase.from('rifas').update(updates).eq('id', 'sorteo_principal');
+    const { error } = await supabase.from('rifas').update(updates).eq('id', 'sorteo_principal');
+    if (error) console.error("Error al sincronizar con Supabase:", error);
   }
 
   supabase.channel('public:rifas').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rifas' }, payload => {
