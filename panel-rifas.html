@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel de rifas</title>
+<style>
+  body { margin:0; padding:20px; background:#0a1912; display:flex; justify-content:center; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; min-height:100vh; }
+  #root {
+    --bg:#0F2E22; --bg-panel:#14392A; --bg-panel-2:#1A4432; --gold:#D4A72C; --gold-soft:#E8C766;
+    --cream:#F3ECD9; --cream-dim:#C9C2AC; --line:rgba(243,236,217,0.18); --red:#9B3030; --green:#6FD19B; --amber:#D99A34;
+    --font-display: Georgia, 'Times New Roman', serif;
+    background:var(--bg); color:var(--cream); border-radius:14px; box-shadow:0 20px 60px rgba(0,0,0,.35);
+    width:100%; max-width:900px; overflow:hidden;
+  }
+  #root * { box-sizing:border-box; }
+  .header { padding:26px 28px 18px; background:linear-gradient(180deg,var(--bg-panel-2),var(--bg-panel)); border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:14px; }
+  .eyebrow { font-size:11px; letter-spacing:3px; text-transform:uppercase; color:var(--gold-soft); font-weight:600; margin-bottom:6px; }
+  h1 { font-family:var(--font-display); font-size:26px; margin:0; }
+  .btn { font-size:13px; font-weight:600; padding:10px 16px; border-radius:7px; border:1px solid var(--gold); background:var(--gold); color:#1A2A1F; cursor:pointer; text-decoration:none; display:inline-block; }
+  .btn.ghost { background:transparent; color:var(--gold-soft); }
+  .btn:hover { background:var(--gold-soft); }
+  .btn.ghost:hover { background:rgba(212,167,44,.12); }
+  .toolbar { padding:16px 28px; display:flex; gap:10px; border-bottom:1px solid var(--line); flex-wrap:wrap; align-items:center; }
+  input[type=text], input[type=password] { background:var(--bg); border:1px solid var(--line); color:var(--cream); border-radius:6px; padding:9px 12px; font-size:13px; font-family:inherit; }
+  .summary { display:flex; gap:0; border-bottom:1px solid var(--line); }
+  .summary .s { flex:1; padding:14px 18px; text-align:center; border-right:1px solid var(--line); }
+  .summary .s:last-child { border-right:none; }
+  .summary .num { font-family:var(--font-display); font-size:22px; font-weight:700; color:var(--gold-soft); }
+  .summary .lbl { font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--cream-dim); margin-top:2px; }
+  .list { padding:18px 28px 28px; display:flex; flex-direction:column; gap:12px; }
+  .card { border:1px solid var(--line); border-radius:10px; padding:16px 18px; background:rgba(255,255,255,0.02); }
+  .card-top { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+  .card-title { font-family:var(--font-display); font-size:18px; color:var(--gold-soft); }
+  .card-sub { font-size:11px; color:var(--cream-dim); margin-top:2px; }
+  .badge { font-size:10px; text-transform:uppercase; letter-spacing:1px; padding:3px 8px; border-radius:20px; border:1px solid var(--line); }
+  .badge.sorteada { border-color:var(--green); color:var(--green); }
+  .badge.abierta { border-color:var(--amber); color:var(--amber); }
+  .badge.pagado { border-color:var(--green); color:var(--green); }
+  .badge.pendiente { border-color:var(--red); color:#E39191; }
+  .stats-row { display:flex; gap:16px; margin-top:12px; flex-wrap:wrap; }
+  .stat-mini { font-size:12px; color:var(--cream-dim); }
+  .stat-mini b { color:var(--cream); font-family:var(--font-display); }
+  .card-actions { display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
+  .card-actions .btn { font-size:12px; padding:7px 12px; }
+  .btn.danger { border-color:var(--red); color:#E39191; background:transparent; }
+  .btn.danger:hover { background:rgba(155,48,48,.15); }
+  .empty { padding:60px 28px; text-align:center; color:var(--cream-dim); }
+  .gate { padding:60px 28px; text-align:center; }
+  .gate input { width:220px; text-align:center; }
+  .msg { margin-top:12px; font-size:13px; color:#E39191; }
+  .loading { padding:60px 28px; text-align:center; color:var(--gold-soft); }
+</style>
+</head>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<div id="root">
+  <div id="gate" class="gate">
+    <div class="eyebrow">Backoffice</div>
+    <h1 style="margin-bottom:18px;">Panel de rifas</h1>
+    <input type="password" id="master-pass" placeholder="Clave maestra">
+    <button class="btn" id="btn-entrar" style="margin-left:8px;">Entrar</button>
+    <div id="gate-msg" class="msg"></div>
+  </div>
+
+  <div id="content" style="display:none;">
+    <div class="header">
+      <div>
+        <div class="eyebrow">Backoffice</div>
+        <h1>Tus rifas</h1>
+      </div>
+      <a class="btn" href="crear-rifa.html">+ Crear nueva rifa</a>
+    </div>
+
+    <div class="toolbar">
+      <input type="text" id="buscador" placeholder="Buscar por título...">
+      <button class="btn ghost" id="btn-refrescar">Actualizar</button>
+    </div>
+
+    <div class="summary">
+      <div class="s"><div class="num" id="sum-rifas">0</div><div class="lbl">Rifas</div></div>
+      <div class="s"><div class="num" id="sum-vendidos">0</div><div class="lbl">Números vendidos</div></div>
+      <div class="s"><div class="num" id="sum-recaudo">$0</div><div class="lbl">Recaudo total (clientes)</div></div>
+      <div class="s"><div class="num" id="sum-facturado">$0</div><div class="lbl">Tu cobro facturado</div></div>
+      <div class="s"><div class="num" id="sum-pendiente">$0</div><div class="lbl">Tu cobro pendiente</div></div>
+    </div>
+
+    <div id="lista" class="list"></div>
+  </div>
+</div>
+
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.4/+esm';
+
+  const supabaseUrl = 'https://gkbostzepzelzrgzsgrs.supabase.co';
+  const supabaseKey = 'sb_publishable_hWt_cG8ic8kDMrAoHzV8AQ_JzZLSyOT';
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
+  // Debe ser la MISMA clave que pusiste en crear-rifa.html
+  const MASTER_PASSWORD = 'CAMBIA-ESTA-CLAVE';
+
+  const $ = (id) => document.getElementById(id);
+  let rifas = [];
+
+  function fmtMoney(n){ return '$' + Number(n||0).toLocaleString('es-CO'); }
+
+  function boardBaseUrl(){
+    return window.location.href.replace(/panel-rifas\.html.*$/, 'rifa.html');
+  }
+
+  function contarBoard(board){
+    let disp=0, apar=0, vend=0;
+    Object.values(board || {}).forEach(e=>{
+      if (e.status==='disponible') disp++;
+      else if (e.status==='apartado') apar++;
+      else if (e.status==='vendido') vend++;
+    });
+    return { disp, apar, vend };
+  }
+
+  async function cargarRifas(){
+    $('lista').innerHTML = '<div class="loading">Cargando rifas...</div>';
+    const { data, error } = await supabase.from('rifas').select('*').order('id', { ascending: true });
+    if (error) {
+      $('lista').innerHTML = `<div class="empty">Error al cargar: ${error.message}</div>`;
+      return;
+    }
+    rifas = data || [];
+    render();
+  }
+
+  function render(){
+    const filtro = ($('buscador').value || '').toLowerCase().trim();
+    const filtradas = rifas.filter(r => {
+      const titulo = (r.config && r.config.titulo || r.id).toLowerCase();
+      return titulo.includes(filtro) || r.id.toLowerCase().includes(filtro);
+    });
+
+    let totalVendidos = 0, totalRecaudo = 0;
+    let totalFacturado = 0, totalPendiente = 0;
+    rifas.forEach(r => {
+      const { vend } = contarBoard(r.board);
+      totalVendidos += vend;
+      totalRecaudo += vend * ((r.config && r.config.precio) || 0);
+      const precioServicio = Number(r.servicio_precio) || 0;
+      if (r.servicio_pagado) totalFacturado += precioServicio;
+      else totalPendiente += precioServicio;
+    });
+    $('sum-rifas').textContent = rifas.length;
+    $('sum-vendidos').textContent = totalVendidos;
+    $('sum-recaudo').textContent = fmtMoney(totalRecaudo);
+    $('sum-facturado').textContent = fmtMoney(totalFacturado);
+    $('sum-pendiente').textContent = fmtMoney(totalPendiente);
+
+    if (filtradas.length === 0) {
+      $('lista').innerHTML = '<div class="empty">No se encontraron rifas. Crea la primera con el botón de arriba.</div>';
+      return;
+    }
+
+    $('lista').innerHTML = filtradas.map(r => {
+      const cfg = r.config || {};
+      const { disp, apar, vend } = contarBoard(r.board);
+      const total = disp + apar + vend;
+      const recaudo = vend * (cfg.precio || 0);
+      const sorteada = !!(r.draw && r.draw.numero);
+      const link = boardBaseUrl() + '?r=' + r.id;
+      const precioServicio = Number(r.servicio_precio) || 0;
+      const pagado = !!r.servicio_pagado;
+
+      return `
+        <div class="card" data-id="${r.id}">
+          <div class="card-top">
+            <div>
+              <div class="card-title">${cfg.titulo || r.id}</div>
+              <div class="card-sub">${cfg.premio || 'Sin premio definido'} · ${r.id}</div>
+            </div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <span class="badge ${sorteada ? 'sorteada' : 'abierta'}">${sorteada ? 'Sorteada' : 'Abierta'}</span>
+              <span class="badge ${pagado ? 'pagado' : 'pendiente'}">${pagado ? 'Servicio pagado' : 'Servicio pendiente'}</span>
+            </div>
+          </div>
+          <div class="stats-row">
+            <div class="stat-mini"><b>${vend}</b>/${total} vendidos</div>
+            <div class="stat-mini"><b>${apar}</b> apartados</div>
+            <div class="stat-mini"><b>${fmtMoney(recaudo)}</b> recaudado</div>
+            <div class="stat-mini">Tu tarifa: <b>${fmtMoney(precioServicio)}</b></div>
+            ${cfg.fecha ? `<div class="stat-mini">Sorteo: <b>${cfg.fecha}</b></div>` : ''}
+          </div>
+          <div class="card-actions">
+            <a class="btn ghost" href="${link}" target="_blank">Abrir rifa</a>
+            <button class="btn ghost btn-copiar" data-link="${link}">Copiar link</button>
+            <button class="btn ghost btn-pago" data-id="${r.id}" data-pagado="${pagado}">${pagado ? 'Marcar como pendiente' : 'Marcar como pagada'}</button>
+            <button class="btn ghost btn-cuenta" data-id="${r.id}">Generar cuenta de cobro</button>
+            <button class="btn danger btn-borrar" data-id="${r.id}">Eliminar</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    document.querySelectorAll('.btn-copiar').forEach(b => {
+      b.addEventListener('click', () => {
+        navigator.clipboard.writeText(b.dataset.link);
+        b.textContent = '¡Copiado!';
+        setTimeout(() => b.textContent = 'Copiar link', 1200);
+      });
+    });
+    document.querySelectorAll('.btn-pago').forEach(b => {
+      b.addEventListener('click', async () => {
+        const nuevoEstado = b.dataset.pagado !== 'true';
+        const { error } = await supabase.from('rifas').update({
+          servicio_pagado: nuevoEstado,
+          servicio_pagado_en: nuevoEstado ? new Date().toISOString() : null
+        }).eq('id', b.dataset.id);
+        if (error) { alert('Error al actualizar: ' + error.message); return; }
+        await cargarRifas();
+      });
+    });
+    document.querySelectorAll('.btn-cuenta').forEach(b => {
+      b.addEventListener('click', () => generarCuentaCobro(b.dataset.id));
+    });
+    document.querySelectorAll('.btn-borrar').forEach(b => {
+      b.addEventListener('click', async () => {
+        if (!confirm(`¿Eliminar la rifa "${b.dataset.id}" para siempre? Esta acción no se puede deshacer.`)) return;
+        const { error } = await supabase.from('rifas').delete().eq('id', b.dataset.id);
+        if (error) { alert('Error al eliminar: ' + error.message); return; }
+        await cargarRifas();
+      });
+    });
+  }
+
+  // Cambia estos datos por los tuyos / los de Office Redes antes de publicar.
+  const EMISOR = {
+    nombre: 'Office Redes - Soluciones Tecnológicas',
+    nit: 'Tu NIT o cédula aquí',
+    contacto: 'Tu teléfono o correo aquí'
+  };
+  let numeroConsecutivo = Math.floor(Date.now() / 1000) % 100000;
+
+  function generarCuentaCobro(rifaId){
+    const r = rifas.find(x => x.id === rifaId);
+    if (!r) return;
+    const cfg = r.config || {};
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const numero = ++numeroConsecutivo;
+    const fechaHoy = new Date().toLocaleDateString('es-CO', { year:'numeric', month:'long', day:'numeric' });
+
+    doc.setFontSize(16); doc.setFont(undefined,'bold');
+    doc.text('CUENTA DE COBRO', 105, 22, { align:'center' });
+    doc.setFontSize(10); doc.setFont(undefined,'normal');
+    doc.text(`No. ${numero}`, 105, 29, { align:'center' });
+
+    doc.setFontSize(11);
+    doc.text(`Fecha: ${fechaHoy}`, 20, 45);
+    doc.text(`De: ${EMISOR.nombre}`, 20, 53);
+    doc.text(`Contacto: ${EMISOR.contacto}`, 20, 60);
+    doc.text(`Para: ${r.cliente_contacto || 'Cliente'}`, 20, 70);
+
+    doc.setDrawColor(180); doc.line(20, 78, 190, 78);
+
+    doc.setFont(undefined,'bold'); doc.text('Concepto', 20, 88);
+    doc.setFont(undefined,'normal');
+    const concepto = `Creación y hospedaje de sistema digital de rifa "${cfg.titulo || rifaId}" (${cfg.cantidad_numeros || 100} números).`;
+    const lineas = doc.splitTextToSize(concepto, 170);
+    doc.text(lineas, 20, 96);
+
+    const yValor = 96 + lineas.length * 7 + 12;
+    doc.setDrawColor(180); doc.line(20, yValor - 8, 190, yValor - 8);
+    doc.setFont(undefined,'bold');
+    doc.text('Valor a pagar:', 20, yValor);
+    doc.text(fmtMoney(r.servicio_precio || 0), 190, yValor, { align:'right' });
+
+    doc.setFont(undefined,'normal'); doc.setFontSize(9); doc.setTextColor(120);
+    doc.text('Este documento es una cuenta de cobro informal, no constituye factura electrónica de venta.', 20, yValor + 20);
+
+    doc.save(`cuenta-cobro-${rifaId}.pdf`);
+  }
+
+  $('buscador').addEventListener('input', render);
+  $('btn-refrescar').addEventListener('click', cargarRifas);
+
+  $('btn-entrar').addEventListener('click', () => {
+    if ($('master-pass').value === MASTER_PASSWORD) {
+      $('gate').style.display = 'none';
+      $('content').style.display = 'block';
+      cargarRifas();
+    } else {
+      $('gate-msg').textContent = 'Clave incorrecta.';
+    }
+  });
+  $('master-pass').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('btn-entrar').click(); });
+</script>
+</body>
+</html>
