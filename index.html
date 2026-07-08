@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rifas Digitales · Office Redes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0F2E22;
+    --bg-alt: #0A2019;
+    --panel: #163A2B;
+    --gold: #D4A72C;
+    --gold-soft: #E8C766;
+    --cream: #F3ECD9;
+    --cream-dim: #B9C2AE;
+    --line: rgba(243,236,217,0.14);
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body: 'Inter', -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--cream); font-family: var(--font-body); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; }
+  img { max-width: 100%; display: block; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+  /* ---- Perforated divider, the raffle-ticket signature ---- */
+  .perf { height: 20px; background: radial-gradient(circle at 10px 10px, var(--bg) 5.5px, transparent 6px); background-size: 26px 20px; }
+  .perf.alt { background: radial-gradient(circle at 10px 10px, var(--bg-alt) 5.5px, transparent 6px); background-size: 26px 20px; }
+
+  /* ---- Nav ---- */
+  header.nav { padding: 22px 0; }
+  .nav-inner { display:flex; justify-content:space-between; align-items:center; }
+  .brand { font-family: var(--font-display); font-weight:600; font-size:19px; letter-spacing:.3px; }
+  .brand span { color: var(--gold-soft); }
+  .nav-cta { font-size:13px; font-weight:600; padding:9px 16px; border-radius:7px; border:1px solid var(--gold); color:var(--gold-soft); text-decoration:none; }
+
+  /* ---- Hero ---- */
+  .hero { padding: 40px 0 60px; display:grid; grid-template-columns: 1.1fr 0.9fr; gap: 56px; align-items:center; }
+  .eyebrow { font-size:11px; letter-spacing:3px; text-transform:uppercase; color:var(--gold-soft); font-weight:700; margin-bottom:14px; }
+  h1 { font-family: var(--font-display); font-weight:700; font-size: clamp(34px, 5vw, 54px); line-height:1.05; letter-spacing:-0.5px; }
+  h1 em { font-style: italic; color: var(--gold-soft); font-weight:600; }
+  .hero p.lead { margin-top:18px; font-size:17px; color:var(--cream-dim); max-width:46ch; }
+  .hero-actions { margin-top:30px; display:flex; gap:14px; flex-wrap:wrap; }
+  .btn { display:inline-flex; align-items:center; gap:8px; font-weight:600; font-size:14px; padding:14px 22px; border-radius:8px; text-decoration:none; }
+  .btn-primary { background: var(--gold); color:#152018; }
+  .btn-primary:hover { background: var(--gold-soft); }
+  .btn-ghost { border:1px solid var(--line); color:var(--cream); }
+  .btn-ghost:hover { border-color: var(--gold-soft); color: var(--gold-soft); }
+
+  /* ---- Hero ticket board demo ---- */
+  .demo-card { background: var(--panel); border:1px solid var(--line); border-radius:14px; padding:22px; box-shadow: 0 30px 70px rgba(0,0,0,.4); }
+  .demo-top { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; }
+  .demo-title { font-family: var(--font-display); font-size:17px; color: var(--gold-soft); }
+  .demo-sub { font-size:11px; color: var(--cream-dim); }
+  .demo-grid { display:grid; grid-template-columns: repeat(8, 1fr); gap:6px; }
+  .demo-cell { aspect-ratio:1; border-radius:5px; border:1.5px solid var(--line); display:flex; align-items:center; justify-content:center; font-family: var(--font-display); font-size:11px; font-weight:600; color: var(--cream-dim); }
+  .demo-cell.sold { background:#2E7D53; border-color:#6FD19B; color:#EFFFF4; }
+  .demo-cell.pending { background:#7A5A24; border-color:#D99A34; color:#E8C766; }
+  .demo-foot { display:flex; gap:16px; margin-top:14px; font-size:11px; color:var(--cream-dim); }
+  .demo-foot b { color:var(--cream); font-family: var(--font-display); }
+
+  /* ---- Problem / solution ---- */
+  section.compare { background: var(--bg-alt); padding: 70px 0; }
+  .compare-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+  .compare-col h3 { font-family: var(--font-display); font-size:22px; margin-bottom:16px; }
+  .compare-col.old h3 { color: #C98B7A; }
+  .compare-col.new h3 { color: var(--gold-soft); }
+  .compare-col ul { list-style:none; }
+  .compare-col li { padding: 10px 0; border-bottom:1px solid var(--line); font-size:14.5px; color: var(--cream-dim); }
+  .compare-col.new li { color: var(--cream); }
+
+  /* ---- Features ---- */
+  section.features { padding: 70px 0; }
+  .features h2 { font-family: var(--font-display); font-size:30px; text-align:center; margin-bottom:8px; }
+  .features .sub { text-align:center; color:var(--cream-dim); margin-bottom:44px; font-size:15px; }
+  .feature-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .feature-card { background: var(--panel); border:1px solid var(--line); border-radius:12px; padding:24px; }
+  .feature-card .ico { font-size:22px; margin-bottom:12px; }
+  .feature-card h4 { font-family: var(--font-display); font-size:16.5px; margin-bottom:8px; color: var(--gold-soft); }
+  .feature-card p { font-size:13.5px; color: var(--cream-dim); }
+
+  /* ---- Pricing: ticket stubs ---- */
+  section.pricing { background: var(--bg-alt); padding: 70px 0 80px; }
+  .pricing h2 { font-family: var(--font-display); font-size:30px; text-align:center; margin-bottom:8px; }
+  .pricing .sub { text-align:center; color:var(--cream-dim); margin-bottom:48px; font-size:15px; }
+  .stub-row { display:grid; grid-template-columns: repeat(2, 1fr); gap: 28px; max-width: 780px; margin: 0 auto; }
+  .stub { position:relative; background: var(--panel); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  .stub-main { padding: 30px 28px; }
+  .stub-tag { font-size:11px; letter-spacing:2px; text-transform:uppercase; color: var(--cream-dim); }
+  .stub-qty { font-family: var(--font-display); font-size:26px; margin: 6px 0 4px; }
+  .stub-price { font-family: var(--font-display); font-size:34px; color: var(--gold-soft); }
+  .stub-price small { font-size:13px; color: var(--cream-dim); font-family: var(--font-body); }
+  .stub-perf { height:0; border-top: 2px dashed var(--line); position:relative; margin: 0 20px; }
+  .stub-perf::before, .stub-perf::after { content:''; position:absolute; top:-9px; width:18px; height:18px; border-radius:50%; background: var(--bg-alt); }
+  .stub-perf::before { left:-29px; }
+  .stub-perf::after { right:-29px; }
+  .stub-list { padding: 22px 28px 26px; }
+  .stub-list div { font-size:13.5px; color: var(--cream); padding: 6px 0; }
+  .stub-list div b { color: var(--gold-soft); }
+  .stub.highlight { border-color: var(--gold); }
+
+  /* ---- Final CTA ---- */
+  section.cta-final { padding: 80px 0 90px; text-align:center; }
+  .cta-final h2 { font-family: var(--font-display); font-size: clamp(28px,4vw,40px); max-width: 20ch; margin: 0 auto 18px; }
+  .cta-final p { color: var(--cream-dim); font-size:15px; margin-bottom: 28px; }
+
+  footer { border-top:1px solid var(--line); padding: 28px 0; }
+  .footer-inner { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; font-size:12px; color: var(--cream-dim); }
+  .footer-note { font-size:11px; color: var(--cream-dim); opacity:.75; margin-top:8px; max-width:70ch; }
+
+  @media (max-width: 860px) {
+    .hero { grid-template-columns: 1fr; }
+    .compare-grid { grid-template-columns: 1fr; gap: 30px; }
+    .feature-grid { grid-template-columns: 1fr 1fr; }
+    .stub-row { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 520px) {
+    .feature-grid { grid-template-columns: 1fr; }
+    .demo-grid { grid-template-columns: repeat(6, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <div class="brand">Office Redes <span>· Rifas Digitales</span></div>
+    <a class="nav-cta" href="#contacto">Quiero mi rifa</a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap hero" style="padding-top:10px;">
+    <div>
+      <div class="eyebrow">Sistema de rifas digitales</div>
+      <h1>Tu rifa, <em>sin talonario</em>.</h1>
+      <p class="lead">Reemplaza el cuaderno y las llamadas de "¿ese número ya está vendido?" por un tablero en vivo que tú y tus compradores pueden ver desde el celular, en tiempo real.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#contacto">Habla conmigo por WhatsApp</a>
+        <a class="btn btn-ghost" href="#precios">Ver precios</a>
+      </div>
+    </div>
+
+    <div class="demo-card">
+      <div class="demo-top">
+        <div>
+          <div class="demo-title">Rifa Nevera Familiar</div>
+          <div class="demo-sub">Ejemplo · así se ve tu tablero</div>
+        </div>
+      </div>
+      <div class="demo-grid" id="demo-grid"></div>
+      <div class="demo-foot">
+        <div><b>61</b> disponibles</div>
+        <div><b>14</b> apartados</div>
+        <div><b>25</b> vendidos</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="perf alt"></div>
+
+<section class="compare">
+  <div class="wrap compare-grid">
+    <div class="compare-col old">
+      <h3>Con talonario de papel</h3>
+      <ul>
+        <li>Se pierde o se moja el cuaderno.</li>
+        <li>Vendes el mismo número dos veces sin darte cuenta.</li>
+        <li>Nadie sabe cuánto llevas vendido sin llamarte.</li>
+        <li>El día del sorteo, todo depende de tu memoria.</li>
+      </ul>
+    </div>
+    <div class="compare-col new">
+      <h3>Con tu rifa digital</h3>
+      <ul>
+        <li>El tablero vive en un link, no se pierde nunca.</li>
+        <li>Un número apartado queda bloqueado al instante para todos.</li>
+        <li>Ves cuánto vas vendido y recaudado en cualquier momento.</li>
+        <li>El sorteo queda verificado contra la lotería oficial.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="features">
+  <div class="wrap">
+    <h2>Lo que trae cada rifa</h2>
+    <p class="sub">Sin instalar nada. Tus compradores solo necesitan el link.</p>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="ico">🎟️</div>
+        <h4>Tablero en tiempo real</h4>
+        <p>Cada número muestra su estado al instante para cualquiera que abra el link, sin recargar la página.</p>
+      </div>
+      <div class="feature-card">
+        <div class="ico">💬</div>
+        <h4>Apartado por WhatsApp</h4>
+        <p>Al elegir su número, el comprador te escribe directo a tu WhatsApp con los datos ya listos.</p>
+      </div>
+      <div class="feature-card">
+        <div class="ico">📎</div>
+        <h4>Comprobante de pago</h4>
+        <p>Puede adjuntar la foto de la transferencia al momento de apartar, para que confirmes con confianza.</p>
+      </div>
+      <div class="feature-card">
+        <div class="ico">🔒</div>
+        <h4>Privacidad de tus compradores</h4>
+        <p>El público solo ve iniciales, nunca el nombre completo ni el teléfono de nadie más.</p>
+      </div>
+      <div class="feature-card">
+        <div class="ico">🎲</div>
+        <h4>Sorteo verificado</h4>
+        <p>El ganador se calcula contra el resultado real de la lotería que elijas, visible para todos.</p>
+      </div>
+      <div class="feature-card">
+        <div class="ico">📊</div>
+        <h4>Tu panel de control</h4>
+        <p>Cuánto llevas vendido, cuánto recaudado, y quién compró qué, todo en un solo lugar.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="perf alt"></div>
+
+<section class="pricing" id="precios">
+  <div class="wrap">
+    <h2>Precios</h2>
+    <p class="sub">Pagas una sola vez por la creación y el hospedaje de tu rifa.</p>
+    <div class="stub-row">
+      <div class="stub">
+        <div class="stub-main">
+          <div class="stub-tag">Rifa pequeña</div>
+          <div class="stub-qty">100 números</div>
+          <div class="stub-price">$50.000</div>
+        </div>
+        <div class="stub-perf"></div>
+        <div class="stub-list">
+          <div><b>✓</b> Tablero 00–99</div>
+          <div><b>✓</b> Link listo el mismo día</div>
+          <div><b>✓</b> Sorteo verificado incluido</div>
+        </div>
+      </div>
+      <div class="stub highlight">
+        <div class="stub-main">
+          <div class="stub-tag">Rifa grande</div>
+          <div class="stub-qty">1000 números</div>
+          <div class="stub-price">$150.000</div>
+        </div>
+        <div class="stub-perf"></div>
+        <div class="stub-list">
+          <div><b>✓</b> Tablero 000–999</div>
+          <div><b>✓</b> Ideal para premios de alto valor</div>
+          <div><b>✓</b> Sorteo verificado incluido</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-final" id="contacto">
+  <div class="wrap">
+    <h2>Cuéntame tu rifa y te la dejo lista hoy mismo</h2>
+    <p>Premio, precio por número, fecha del sorteo — con eso ya puedo empezar.</p>
+    <a class="btn btn-primary" href="https://wa.me/573042668929?text=Hola%2C%20quiero%20crear%20mi%20rifa%20digital">Escríbeme por WhatsApp</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-inner">
+      <div>© Office Redes · Soluciones Tecnológicas</div>
+      <div>Cartagena, Colombia</div>
+    </div>
+    <div class="footer-note">El organizador de cada rifa es responsable de cumplir la normatividad vigente para sorteos y rifas en su municipio. Office Redes provee únicamente el sistema de gestión.</div>
+  </div>
+</footer>
+
+<script>
+  // Tablero decorativo del hero: un patrón fijo que ilustra el producto, no es funcional.
+  const grid = document.getElementById('demo-grid');
+  const vendidos = new Set([2,3,9,14,15,16,22,27,31,32,38,40,45,46,51,52,58,60,61,67,70,75,76,81,82]);
+  const apartados = new Set([5,11,19,24,29,35,43,48,54,63,68,72,78,85]);
+  for (let i=0;i<48;i++){
+    const cell = document.createElement('div');
+    let cls = 'demo-cell';
+    if (vendidos.has(i)) cls += ' sold';
+    else if (apartados.has(i)) cls += ' pending';
+    cell.className = cls;
+    cell.textContent = String(i).padStart(2,'0');
+    grid.appendChild(cell);
+  }
+</script>
+</body>
+</html>
